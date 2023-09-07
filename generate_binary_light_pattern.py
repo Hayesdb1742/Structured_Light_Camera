@@ -3,7 +3,7 @@ import math
 import cv2
 
 # Set the number of stripes
-N = 32  # Change this to the desired number of stripes
+N = 128  # Change this to the desired number of stripes
 numStripes = [128,64,32,16,8,4,2,1]
 
 # Create a binary pattern of alternating black and white stripes
