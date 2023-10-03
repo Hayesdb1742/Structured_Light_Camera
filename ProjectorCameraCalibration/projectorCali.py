@@ -9,7 +9,6 @@ INPUT_DIR = "TestImages"
 OUTPUT_DIR = "decoded"
 CHESSBOARD_SIZE = (8, 5)
 
-# 1. Detect corner points on the camera image
 def detect_corners(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     ret, corners = cv2.findChessboardCorners(img, CHESSBOARD_SIZE, None)
@@ -20,7 +19,6 @@ def detect_corners(image_path):
     else:
         return None
 
-# 2. Convert to projector image coordinates
 def convert_to_projector_coordinates(camera_corners, decoded_x, decoded_y):
     projector_corners = []
     height, width = decoded_x.shape
@@ -33,25 +31,24 @@ def convert_to_projector_coordinates(camera_corners, decoded_x, decoded_y):
     projector_corners = np.array(projector_corners, dtype=np.float32)
     return projector_corners
 
+def compute_intrinsics_and_distortion(objpoints, imgpoints, img_shape):
+    ret, matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_shape, None, None)
+    print("ret:", ret)
+    print("mtx:", matrix)
+    print("dist:", dist_coeffs)
+    print("rvecs:", rvecs)
+    print("tvecs:", tvecs)
+    return matrix, dist_coeffs
 
-# 3. Stereo calibration
-def perform_stereo_calibration(objpoints, camera_corners, projector_corners):
-    # Initial guesses for intrinsic matrices and distortion coefficients
-    cam_matrix_init = np.eye(3)
-    cam_dist_init = np.zeros((5,))
-    proj_matrix_init = np.eye(3)
-    proj_dist_init = np.zeros((5,))
-
-    ret, camera_matrix, dist_coeffs, projector_matrix, proj_dist_coeffs, R, T, E, F = cv2.stereoCalibrate(
+def perform_stereo_calibration(objpoints, camera_corners, projector_corners, cam_matrix, cam_dist, proj_matrix, proj_dist):
+    ret, _, _, _, _, R, T, E, F = cv2.stereoCalibrate(
         objpoints, camera_corners, projector_corners,
-        cam_matrix_init, cam_dist_init,
-        proj_matrix_init, proj_dist_init,
-        None, flags=cv2.CALIB_FIX_INTRINSIC
+        cam_matrix, cam_dist,
+        proj_matrix, proj_dist,
+        None
     )
-    return camera_matrix, dist_coeffs, projector_matrix, proj_dist_coeffs, R, T
+    return R, T
 
-
-# Main
 if __name__ == "__main__":
     files = os.listdir(INPUT_DIR)
     white_files = files[::3]
@@ -72,7 +69,6 @@ if __name__ == "__main__":
 
             projector_corners = convert_to_projector_coordinates(camera_corners, decoded_x, decoded_y)
 
-            # Check for consistent number of corners
             if len(camera_corners) != len(projector_corners):
                 print(f"Skipping {w_file} due to inconsistent corner detection.")
                 continue
@@ -84,9 +80,15 @@ if __name__ == "__main__":
             objp[:, :2] = np.mgrid[0:CHESSBOARD_SIZE[0], 0:CHESSBOARD_SIZE[1]].T.reshape(-1, 2)
             objpoints.append(objp)
 
-    cam_matrix, cam_dist, proj_matrix, proj_dist, R, T = perform_stereo_calibration(objpoints, all_camera_corners,
-                                                                                    all_projector_corners)
+    img_shape = cv2.imread(os.path.join(INPUT_DIR, white_files[0]), cv2.IMREAD_GRAYSCALE).shape[::-1]
+    print("Camera intrinsic parameters:")
+    cam_matrix, cam_dist = compute_intrinsics_and_distortion(objpoints, all_camera_corners, img_shape)
+    print("\nProjector intrinsic parameters:")
+    proj_matrix, proj_dist = compute_intrinsics_and_distortion(objpoints, all_projector_corners, img_shape)
 
+    R, T = perform_stereo_calibration(objpoints, all_camera_corners, all_projector_corners, cam_matrix, cam_dist, proj_matrix, proj_dist)
+
+    print("\nSummary:")
     print(f"Camera Matrix:\n{cam_matrix}")
     print(f"Camera Distortion Coefficients:\n{cam_dist}")
     print(f"Projector Matrix:\n{proj_matrix}")
