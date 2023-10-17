@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    color_array = gen_color_from_string(H4, 4).astype(np.float32)  # ハミングコード
+    color_array = gen_color_from_string(H4, 4).astype(np.float32)
     id_color = gen_color()
 
 
