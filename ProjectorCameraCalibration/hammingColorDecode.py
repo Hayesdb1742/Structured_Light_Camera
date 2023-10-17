@@ -54,7 +54,7 @@ def get_segment_image(img, mask, id_color):
     for j in range(h):
         for i in range(w):
             if mask[j, i] > 0:
-                seg[j, i] = get_seg(img[j, i], id_color) + 1  # +1はH4がゼロ無いから
+                seg[j, i] = get_seg(img[j, i], id_color) + 1
 
     return seg
 
