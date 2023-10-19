@@ -7,7 +7,26 @@ import time
 
 def start_script():
     global script_process
-    script_process = subprocess.Popen(['python', 'test.py'])
+    script_path = 'connectToPi.sh'
+    # script_process = subprocess.Popen(['python', 'test.py'])
+    script_process = subprocess.Popen("plink lightwork@raspberrypi.local -pw TEAM10",shell=False,stdin=subprocess.PIPE)
+    print("Script executed successfully")
+    print("Script output:")
+    print(script_process.stdout)
+    script_process.stdin.write("cd scripts\n".encode('utf-8'))
+    script_process.stdin.write("libcamerify python3 image.py\n".encode('utf-8'))
+    script_process.stdin.close()
+    output, errors = script_process.communicate()
+
+    # Print the output and errors from the SSH session
+    print("Output:")
+    print(output)
+
+    print("Errors:")
+    print(errors)
+
+
+
     start_button.config(state=tk.DISABLED, bg='darkgray')
     terminate_button.config(state=tk.NORMAL, bg='lightgray')
 
@@ -18,13 +37,13 @@ def terminate_script():
     terminate_button.config(state=tk.DISABLED, bg='darkgray')
 
 def on_closing():
-    if script_process is not None and script_process.poll() is None:
+    if script_process is not None:
         script_process.terminate()
     root.destroy()
 
 def check_script_status():
     while True:
-        if script_process is not None and script_process.poll() is None:
+        if script_process is not None:
             start_button.config(state=tk.DISABLED, bg='darkgray')
             terminate_button.config(state=tk.NORMAL, bg='lightgray')
             status_label.config(text="Program is running" + "." * (int(time.time()) % 4))
@@ -51,7 +70,7 @@ script_process = None
 button_padx = 20
 button_pady = 10
 
-start_button = tk.Button(root, text="Start", command=start_script, bg='lightgray')
+start_button = tk.Button(root, text="Connect", command=start_script, bg='lightgray')
 start_button.pack(fill=tk.BOTH, expand=True, padx=button_padx, pady=button_pady)
 start_button.pack_propagate(0)
 
