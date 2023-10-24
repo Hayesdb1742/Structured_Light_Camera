@@ -84,8 +84,6 @@ for i in range(N):
     # load image array and pre-process images
     filein = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures\\gray_capture{}.png".format(i+1)
     image_array[i] = cv.imread(filein)
-    #Subtract image with no projection to remove Reflections
-    image_array[i] = cv.subtract(image_array[i],blankImage)
     
     #Convert to black and white based on grascale (average per pixel thresholding)
     image_array[i] = pbpthreshold(image_array[i],avg_thresh)
