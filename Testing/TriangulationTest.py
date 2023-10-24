@@ -47,8 +47,8 @@ def triangulate_points(decoded_image, K, R, t, P_proj):
             # Homogeneous coordinates for the corresponding point in the projector
             projector_homogeneous = np.array([x - disparity, y, 1])
 
-            # Stack the points for triangulation
-            A = np.vstack((pixel_homogeneous @ P_cam, projector_homogeneous @ P_proj))
+            # Stack the linear equations for triangulation
+            A = np.vstack((pixel_homogeneous @ P_cam, projector_homogeneous @ P_proj)) 
             
             # Obtain the 3D point by solving AX=0
             _, _, Vt = np.linalg.svd(A)
@@ -170,13 +170,14 @@ for i in range(N):
     image_array[i] = image_thresh
     
 decoded_image = decodeGrayPattern(image_array,N)
-# plt.imshow(decoded_image)
-# plt.show()
-K = np.array([[1,4,5],[2,1,1],[0,0,1]])
-R = np.array([[3,2,0],[1,1,0],[0,0,1]])
-t = np.array([[0],[0],[1]])
-P_proj = np.array([[1,1,0,-10],[0,1,0,0],[0,0,1,3]])
+plt.imshow(decoded_image,cmap='gray')
+plt.show()
 
-points_3D = triangulate_points(decoded_image,K,R,t,P_proj)
+K = np.array([[250,0,100],[0,250,75],[0,0,1]])
+R = np.array([[0,1,0],[1,0,0],[0,0,1]])
+t = np.array([[-10],[0],[1]])
+P_proj = np.array([[100,0,0,1],[0,150,0,0],[0,0,100,1]])
+
+points_3D = triangulate_using_opencv(decoded_image,K,R,t,P_proj)
 print(points_3D.shape)
 visualize_point_cloud(points_3D)
