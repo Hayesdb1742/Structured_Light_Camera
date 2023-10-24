@@ -20,48 +20,6 @@ def createGrayPattern(N, projector_size):
     filename = "gray_pattern{}.png".format(N)
     cv.imwrite(directory + "\\" + filename, pattern)
     
-
-for i in range(N):
-    createGrayPattern(i + 1, projector_size)
-   
-# Initialize the camera
-camera = cv.VideoCapture(0)
-
-# Set camera properties
-camera_frame = (1920,1080) #x,y dimensions (same as projector)
-camera.set(cv.CAP_PROP_FRAME_WIDTH, camera_frame[0])
-camera.set(cv.CAP_PROP_FRAME_HEIGHT, camera_frame[1]) 
-# Capture Initial image with no projection
-ret, frame = camera.read()
-filename = "blank_image.png"
-directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
-
-# Capture Image with all White projection
-ret, frame = camera.read()
-filename = "full_image.png"
-
-# Loop through and capture multiple images after projection
-for i in range(N):
-    # Project Image # 
-    
-    # Capture a single frame from the camera
-    ret, frame = camera.read()
-    filename = "image_{}.png".format(i+1)
-    directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
-    cv.imwrite(directory + "\\" + filename, frame)
-
-# Release the camera
-camera.release()
-
-blankImage = cv.imread('blank_image.png')
-fullImage = cv.imread('full_image.png')
-#Loop over all captured images
-image_array = np.empty((N,camera_frame[1],camera_frame[0]), dtype=object)
-binary_array = np.zeros((N,2**N), dtype=int)
-x_array = np.zeros((N,2**N), dtype=int) 
-avg_thresh = cv.addWeighted(blankImage, 0.5, fullImage, 0.5,0) #add white and blank images for thresholding and average
-avg_thresh = cv.divide(avg_thresh,2)                           #divide to finish averaging (per pixel thresholding)
-
 def pbpthreshold(image,threshold):
     #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -78,15 +36,6 @@ def pbpthreshold(image,threshold):
             
     image = flatimage.reshape(image.shape)
     return image
-
-
-for i in range(N):
-    # load image array and pre-process images
-    filein = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures\\gray_capture{}.png".format(i+1)
-    image_array[i] = cv.imread(filein)
-    
-    #Convert to black and white based on grascale (average per pixel thresholding)
-    image_array[i] = pbpthreshold(image_array[i],avg_thresh)
     
 def pbpthreshold(image,threshold):
     #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
@@ -144,5 +93,62 @@ def visualize_point_cloud(points_3D):
 
     # Visualize the point cloud
     o3d.visualization.draw_geometries([point_cloud])
+
+
+
+for i in range(N):
+    createGrayPattern(i + 1, projector_size)
+   
+# Initialize the camera
+camera = cv.VideoCapture(0)
+
+# Set camera properties
+camera_frame = (1920,1080) #x,y dimensions (same as projector)
+camera.set(cv.CAP_PROP_FRAME_WIDTH, camera_frame[0])
+camera.set(cv.CAP_PROP_FRAME_HEIGHT, camera_frame[1]) 
+# Capture Initial image with no projection
+ret, frame = camera.read()
+filename = "blank_image.png"
+directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
+
+# Capture Image with all White projection
+ret, frame = camera.read()
+filename = "full_image.png"
+
+# Loop through and capture multiple images after projection
+for i in range(N):
+    # Project Image # 
     
+    # Capture a single frame from the camera
+    ret, frame = camera.read()
+    filename = "image_{}.png".format(i+1)
+    directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
+    cv.imwrite(directory + "\\" + filename, frame)
+
+# Release the camera
+camera.release()
+
+
+blankImage = cv.imread("C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\blankImage.bmp")
+fullImage = cv.imread("C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\fullImage.bmp")
+blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
+fullImage = cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
+N = 10
+image_array = np.empty((N,fullImage.shape[0],fullImage.shape[1]), dtype=blankImage.dtype)
+avg_thresh = cv.addWeighted(blankImage,0.5,fullImage,0.5,0) #add white and blank images for thresholding and average
+avg_thresh = cv.divide(avg_thresh,2)                           #divide to finish averaging (per pixel thresholding)
+
+
+for i in range(N):
+    # load image array and pre-process images
+    filein = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\{}.bmp".format(i+1)
+    image = cv.imread(filein)
+    image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    #Convert to black and white based on grascale (average per pixel thresholding)
+    image_thresh = pbpthreshold(image_gray,avg_thresh)
+    image_array[i] = image_thresh
+    
+decoded_image = decodeGrayPattern(image_array,N)
+plt.imshow(decoded_image,cmap='gray')
+plt.show()
 
