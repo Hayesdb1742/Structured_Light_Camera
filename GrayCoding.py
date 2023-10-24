@@ -88,12 +88,61 @@ for i in range(N):
     #Convert to black and white based on grascale (average per pixel thresholding)
     image_array[i] = pbpthreshold(image_array[i],avg_thresh)
     
+def pbpthreshold(image,threshold):
+    #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
+    flatimage = image.flatten()
+    flatthreshold = threshold.flatten()
+    if len(image) != len(threshold):
+        print("Image and Threshold Matrix are incompatible sizes")
+        return
+    for i in range(len(flatimage)):
+        if flatimage[i] <= flatthreshold[i]:
+            flatimage[i] = 0
+        elif flatimage[i] > flatthreshold[i]:
+            flatimage[i] = 255
+            
+    image = flatimage.reshape(image.shape)
+    return image
 
-def grayDecoded(image_array,N):
-    gray_code = np.empty(size=(image_array.shape[0],image_array.shape[1],N))
-    PointCloud = cv.triangulate(image_array,gray_code)
-    #### NEEDS A LOT MORE WORK
-    return PointCloud
-        
+def decodeGrayPattern(image_array, N):
+    height, width = image_array[0].shape
+
+    # Initialize a 2D array to store the final decoded values
+    decoded_image = np.zeros((height, width), dtype=np.uint16)
+
+    for y in range(height):
+        for x in range(width):
+            binary_str = ''
+            for i in range(N):
+                # Convert 255 to 1 and 0 to 0
+                binary_str += '1' if image_array[i][y, x] == 255 else '0'
+                
+            # Convert binary string to its integer representation
+            decimal = int(binary_str, 2)
+            
+            # Convert integer representation of binary to Gray code integer
+            gray_decimal = binaryToGray(decimal)
+            
+            decoded_image[y, x] = gray_decimal
+    
+    
+    return decoded_image
+
+def binaryToGray(binary_integer):
+    binary_integer ^= (binary_integer >> 1)
+    return binary_integer
+
+def visualize_point_cloud(points_3D):
+    # Convert points from 3D matrix to list of 3D coordinates
+    points = points_3D.reshape(-1, 3)
+    # Filter out zero points
+    points = points[np.any(points != [0, 0, 0], axis=1)]
+
+    # Convert the points to an open3d point cloud object
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(points)
+
+    # Visualize the point cloud
+    o3d.visualization.draw_geometries([point_cloud])
     
 
