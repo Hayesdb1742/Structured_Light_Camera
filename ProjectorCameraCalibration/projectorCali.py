@@ -7,7 +7,7 @@ import numpy as np
 # Constants
 INPUT_DIR = "TestImages"
 OUTPUT_DIR = "decoded"
-CHESSBOARD_SIZE = (8, 5)
+CHESSBOARD_SIZE = (9, 6)
 
 def detect_corners(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
