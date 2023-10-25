@@ -40,7 +40,13 @@ def gen_color_from_string(str_array, k):
 
 
 def get_seg(val, color_array):
-    dif = color_array - val / val.max() * 255.0
+    # dif = color_array - val / val.max() * 255.0
+    max_val = val.max()
+    if max_val == 0:
+        dif = color_array  # or any other default value
+    else:
+        dif = color_array - val / max_val * 255.0
+
     dif = abs(dif)
     dif = dif.sum(axis=1)
     id = np.argmin(dif)
