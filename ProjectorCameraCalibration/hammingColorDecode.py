@@ -149,7 +149,7 @@ def decode_y(cap_h, mask, color_array, id_color):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_dir', '-in_dir', type=str)
+    parser.add_argument('--input_dir', '-in_dir', type=str, default='calibImages')
     parser.add_argument('--lit_thr', '-lit_thr', type=int, default=40)
     parser.add_argument('--output_dir', '-out_dir', type=str, default='decoded')
     parser.add_argument('--output_8bit_dir', '-out_8bit_dir', type=str, default='decoded_8bit')
