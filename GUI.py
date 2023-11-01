@@ -7,26 +7,29 @@ import time
 
 def start_script():
     global script_process
-    script_path = 'connectToPi.sh'
+    script_path = './connectToPi.sh'
     # script_process = subprocess.Popen(['python', 'test.py'])
-    script_process = subprocess.Popen("plink lightwork@raspberrypi.local -pw TEAM10",shell=False,stdin=subprocess.PIPE)
-    print("Script executed successfully")
-    print("Script output:")
-    print(script_process.stdout)
-    script_process.stdin.write("cd scripts\n".encode('utf-8'))
-    script_process.stdin.write("libcamerify python3 image.py\n".encode('utf-8'))
-    script_process.stdin.close()
-    output, errors = script_process.communicate()
+    script_process = subprocess.run(['bash', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if script_process.returncode == 0:
+        #successful connection
+        start_button.config(state=tk.DISABLED, bg='green')
+        pass
+    else:
+        #unsuccessful connection
+        start_button.config(state=tk.DISABLED, bg='red')
+        pass
 
-    # Print the output and errors from the SSH session
-    print("Output:")
-    print(output)
-
-    print("Errors:")
-    print(errors)
-
-
-
+    terminate_button.config(state=tk.NORMAL, bg='lightgray')
+# Function to start the next script in the sequence.
+def start_next_script():
+    global script_process, current_script, scripts_to_run
+    # Check if the script sequence is still running and there are remaining scripts.
+    # if is_running and current_script < len(scripts_to_run):
+    script_name = scripts_to_run[0]  # Get the current script name.
+        # Start the current script.
+    # script_process = ['sh', './test.sh']
+    current_script += 1  # Move to the next script in the sequence.
+    # Update button states.
     start_button.config(state=tk.DISABLED, bg='darkgray')
     terminate_button.config(state=tk.NORMAL, bg='lightgray')
 
@@ -65,7 +68,12 @@ x = (screen_width - initial_width) // 2
 y = (screen_height - initial_height) // 2
 root.geometry(f"{initial_width}x{initial_height}+{x}+{y}")
 
-script_process = None
+# List of scripts to be run in sequence. The names below are placeholders, can be replaced by actual file names later.
+# If more than three file executions are linked together, add the file names in their execution sequence as needed.
+scripts_to_run = ['connectToPi.sh']
+current_script = 0  # Index to keep track of the current script.
+script_process = None  # Will hold the subprocess for the current script.
+is_running = False  # Flag to determine if the script sequence is currently running.
 
 button_padx = 20
 button_pady = 10
