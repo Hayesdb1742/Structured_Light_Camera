@@ -6,11 +6,13 @@ PI_PASSWORD="TEAM10"
 export DISPLAY=:0
 
 # Execute the SSH connection and script execution
-plink -ssh -t $PI_USERNAME@$PI_HOST -pw $PI_PASSWORD "export DISPLAY=:0; cd /home/lightwork/scripts/Structured_Light_Camera/ProjectorCameraCalibration; /bin/bash"
+plink -ssh $PI_USERNAME@$PI_HOST -pw $PI_PASSWORD "export DISPLAY=:0; cd /home/lightwork/scripts/Structured_Light_Camera/ProjectorCameraCalibration; /bin/bash"
 
 
 if [ $? -eq 0 ]; then
     echo "Script ran successfully"
+    (exit 0)
 else
-    echo "Script encountered an error (Exit code: $?)"
+    (exit 2)
+    echo "/nScript encountered an error (Exit code: $?)"
 fi

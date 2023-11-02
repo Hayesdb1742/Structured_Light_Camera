@@ -7,19 +7,35 @@ import time
 
 def start_script():
     global script_process
-    script_path = './connectToPi.sh'
+    global connected 
+    script_path = './connectToPiTest.sh'
     # script_process = subprocess.Popen(['python', 'test.py'])
-    script_process = subprocess.run(['bash', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if script_process.returncode == 0:
+    script_process = subprocess.Popen(['bash', script_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    print(script_process)
+    if script_process.returncode != 0:
         #successful connection
-        start_button.config(state=tk.DISABLED, bg='green')
-        pass
+        start_button.config(state=tk.ACTIVE, bg='green', text="Connected")
+        connected=True
+        sshConnected()
     else:
         #unsuccessful connection
-        start_button.config(state=tk.DISABLED, bg='red')
-        pass
+        start_button.config(state=tk.ACTIVE, bg='red', text="Error")
+        connected=False
 
     terminate_button.config(state=tk.NORMAL, bg='lightgray')
+
+def sshConnected():
+    ## run gray Coding commands
+    print("ssh connected")
+    script_process.stdin.write("ls -l\n")
+    script_process.stdin.flush()
+#    Read the output of the command
+    command_output = script_process.stdout.read()
+    print(command_output)
+
+
+
+
 # Function to start the next script in the sequence.
 def start_next_script():
     global script_process, current_script, scripts_to_run
@@ -30,30 +46,35 @@ def start_next_script():
     # script_process = ['sh', './test.sh']
     current_script += 1  # Move to the next script in the sequence.
     # Update button states.
-    start_button.config(state=tk.DISABLED, bg='darkgray')
-    terminate_button.config(state=tk.NORMAL, bg='lightgray')
+    # start_button.config(state=tk.DISABLED, bg='darkgray')
+    # terminate_button.config(state=tk.NORMAL, bg='lightgray')
 
 def terminate_script():
-    if script_process.poll() is None:
-        script_process.terminate()
-    start_button.config(state=tk.NORMAL, bg='lightgray')
+    # start_button.config(state=tk.NORMAL, bg='lightgray')
     terminate_button.config(state=tk.DISABLED, bg='darkgray')
 
 def on_closing():
-    if script_process is not None:
-        script_process.terminate()
+    # if script_process is not None:
+    #     script_process.terminate()
     root.destroy()
 
 def check_script_status():
     while True:
         if script_process is not None:
-            start_button.config(state=tk.DISABLED, bg='darkgray')
-            terminate_button.config(state=tk.NORMAL, bg='lightgray')
+            if script_process.returncode == 0:
+                start_button.config(state=tk.DISABLED, bg='green', text="Connected")  # Change button color and text
+            else:
+                print("not connected")
+                start_button.config(state=tk.ACTIVE, bg='yellow', text="Error")  # Change button color and text
+
+            terminate_button.config(state=tk.NORMAL, bg='gray')
             status_label.config(text="Program is running" + "." * (int(time.time()) % 4))
         else:
-            start_button.config(state=tk.NORMAL, bg='lightgray')
+            start_button.config(state=tk.NORMAL, bg='lightgray', text="script not running")
             terminate_button.config(state=tk.DISABLED, bg='darkgray')
             status_label.config(text="Program is not running")
+
+
         root.update()
         time.sleep(1)  # Update every second
 
@@ -89,9 +110,9 @@ terminate_button.pack_propagate(0)
 status_label = tk.Label(root, text="Program is not running", font=("Helvetica", 12))
 status_label.pack(pady=10)
 
-status_checker_thread = threading.Thread(target=check_script_status)
-status_checker_thread.daemon = True
-status_checker_thread.start()
+# status_checker_thread = threading.Thread(target=check_script_status)
+# status_checker_thread.daemon = True
+# status_checker_thread.start()
 
 root.protocol("WM_DELETE_WINDOW", on_closing)  # Handle window closing event
 
