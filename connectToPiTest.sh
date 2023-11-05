@@ -6,7 +6,7 @@ PI_PASSWORD="Jorge1742!!!"
 export DISPLAY=:0
 
 # Execute the SSH connection and script execution
-plink -ssh $PI_USERNAME@$PI_HOST -pw $PI_PASSWORD "ls -l"
+plink.exe -ssh $PI_USERNAME@$PI_HOST -pw $PI_PASSWORD "ls -l"
 echo "plink run $PI_USERNAME"
 
 if [ $? -eq 0 ]; then

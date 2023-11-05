@@ -8,18 +8,18 @@ import time
 def start_script():
     global script_process
     global connected 
-    script_path = './connectToPiTest.sh'
+    script_path = './connectToPi.sh'
     # script_process = subprocess.Popen(['python', 'test.py'])
-    script_process = subprocess.Popen(['bash', script_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    script_process = subprocess.run(['bash', script_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print(script_process)
-    if script_process.returncode != 0:
+    if script_process == 0 or script_process is None:
         #successful connection
-        start_button.config(state=tk.ACTIVE, bg='green', text="Connected")
+        start_button.config(state=tk.NORMAL, bg='green', text="Connected")
         connected=True
-        sshConnected()
+        # sshConnected()
     else:
         #unsuccessful connection
-        start_button.config(state=tk.ACTIVE, bg='red', text="Error")
+        start_button.config(state=tk.NORMAL, bg='red', text="Error")
         connected=False
 
     terminate_button.config(state=tk.NORMAL, bg='lightgray')
@@ -62,11 +62,11 @@ def check_script_status():
     while True:
         if script_process is not None:
             if script_process.returncode == 0:
+                print(script_process.stdout)
                 start_button.config(state=tk.DISABLED, bg='green', text="Connected")  # Change button color and text
             else:
-                print("not connected")
-                start_button.config(state=tk.ACTIVE, bg='yellow', text="Error")  # Change button color and text
-
+                print(script_process)
+                start_button.config(state=tk.NORMAL, bg='red', text="SSH Failed: Retry", command=start_script)  # Change button color and text
             terminate_button.config(state=tk.NORMAL, bg='gray')
             status_label.config(text="Program is running" + "." * (int(time.time()) % 4))
         else:
@@ -110,9 +110,9 @@ terminate_button.pack_propagate(0)
 status_label = tk.Label(root, text="Program is not running", font=("Helvetica", 12))
 status_label.pack(pady=10)
 
-# status_checker_thread = threading.Thread(target=check_script_status)
-# status_checker_thread.daemon = True
-# status_checker_thread.start()
+status_checker_thread = threading.Thread(target=check_script_status)
+status_checker_thread.daemon = True
+status_checker_thread.start()
 
 root.protocol("WM_DELETE_WINDOW", on_closing)  # Handle window closing event
 
