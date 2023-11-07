@@ -1,5 +1,6 @@
 import tkinter as tk
 import paramiko
+import socket
 
 # Initialize global variables
 ssh_client = None
@@ -9,6 +10,9 @@ scripts_to_run = ['file_name_1.py', 'file_name_2.py', 'file_name_3.py']
 current_script = 0
 
 # GUI Functions
+import socket  # Import the socket library to handle socket exceptions
+
+
 def connect_to_pi():
     global ssh_client, is_connected
     MY_USERNAME = "lightwork"  # Your SSH username
@@ -34,6 +38,11 @@ def connect_to_pi():
         is_connected = False
         connect_button.config(bg='red', text="Connect", state=tk.NORMAL)
         connection_status_label.config(text=f"SSH connection error: {e}")
+    except (socket.timeout, socket.error) as e:
+        is_connected = False
+        connect_button.config(bg='red', text="Connect", state=tk.NORMAL)
+        connection_status_label.config(text=f"Network error: {e}")
+
 
 def disconnect_from_pi():
     global ssh_client, is_connected
