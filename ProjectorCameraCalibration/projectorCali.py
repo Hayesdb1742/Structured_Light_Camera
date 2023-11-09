@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Constants
-INPUT_DIR = "TestImages"
+INPUT_DIR = "calibImages"
 OUTPUT_DIR = "decoded"
 CHESSBOARD_SIZE = (9, 6)
 
@@ -85,8 +85,10 @@ if __name__ == "__main__":
 
     img_shape = cv2.imread(os.path.join(INPUT_DIR, white_files[0]), cv2.IMREAD_GRAYSCALE).shape[::-1]
     print("Camera intrinsic parameters:")
+    print(all_camera_corners)
     cam_matrix, cam_dist, c_rvecs, c_tvecs = compute_intrinsics_and_distortion(objpoints, all_camera_corners, img_shape)
     print("\nProjector intrinsic parameters:")
+    print(all_projector_corners)
     proj_matrix, proj_dist, p_rvecs, p_tvecs = compute_intrinsics_and_distortion(objpoints, all_projector_corners, img_shape)
 
     R, T = perform_stereo_calibration(objpoints, all_camera_corners, all_projector_corners, cam_matrix, cam_dist, proj_matrix, proj_dist)
@@ -105,3 +107,10 @@ if __name__ == "__main__":
         error = cv2.norm(all_projector_corners[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
         mean_error += error
     print( "total projection error: {}".format(mean_error/len(objpoints)) )
+
+    mean_error = 0
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv2.projectPoints(objpoints[i], c_rvecs[i], c_tvecs[i], cam_matrix, cam_dist)
+        error = cv2.norm(all_camera_corners[i], imgpoints2, cv2.NORM_L2)/len(imgpoints2)
+        mean_error += error
+    print( "total camera error: {}".format(mean_error/len(objpoints)) )
