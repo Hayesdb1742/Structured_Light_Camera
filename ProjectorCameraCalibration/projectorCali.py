@@ -101,6 +101,7 @@ if __name__ == "__main__":
     print(f"Rotation Matrix (R):\n{R}")
     print(f"Translation Vector (T):\n{T}")
 
+    
     mean_error = 0
     for i in range(len(objpoints)):
         imgpoints2, _ = cv2.projectPoints(objpoints[i], p_rvecs[i], p_tvecs[i], proj_matrix, proj_dist)

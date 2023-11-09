@@ -54,6 +54,7 @@ def get_seg(val, color_array):
 
 
 def get_segment_image(img, mask, id_color):
+    
     h, w = img.shape[:2]
 
     seg = np.zeros(img.shape[:2], dtype=np.int32)
@@ -149,8 +150,8 @@ def decode_y(cap_h, mask, color_array, id_color):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_dir', '-in_dir', type=str, default='calibImages')
-    parser.add_argument('--lit_thr', '-lit_thr', type=int, default=20)
+    parser.add_argument('--input_dir', '-in_dir', type=str, default='testCalib')
+    parser.add_argument('--lit_thr', '-lit_thr', type=int, default=40)
     parser.add_argument('--output_dir', '-out_dir', type=str, default='decoded')
     parser.add_argument('--output_8bit_dir', '-out_8bit_dir', type=str, default='decoded_8bit')
     parser.add_argument('--output_mask_dir', '-out_mask_dir', type=str, default='mask')
