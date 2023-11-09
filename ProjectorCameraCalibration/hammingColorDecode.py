@@ -40,7 +40,13 @@ def gen_color_from_string(str_array, k):
 
 
 def get_seg(val, color_array):
-    dif = color_array - val / val.max() * 255.0
+    # dif = color_array - val / val.max() * 255.0
+    max_val = val.max()
+    if max_val == 0:
+        dif = color_array  # or any other default value
+    else:
+        dif = color_array - val / max_val * 255.0
+
     dif = abs(dif)
     dif = dif.sum(axis=1)
     id = np.argmin(dif)
@@ -54,7 +60,7 @@ def get_segment_image(img, mask, id_color):
     for j in range(h):
         for i in range(w):
             if mask[j, i] > 0:
-                seg[j, i] = get_seg(img[j, i], id_color) + 1  # +1はH4がゼロ無いから
+                seg[j, i] = get_seg(img[j, i], id_color) + 1
 
     return seg
 
@@ -143,7 +149,7 @@ def decode_y(cap_h, mask, color_array, id_color):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_dir', '-in_dir', type=str)
+    parser.add_argument('--input_dir', '-in_dir', type=str, default='calibImages')
     parser.add_argument('--lit_thr', '-lit_thr', type=int, default=40)
     parser.add_argument('--output_dir', '-out_dir', type=str, default='decoded')
     parser.add_argument('--output_8bit_dir', '-out_8bit_dir', type=str, default='decoded_8bit')
@@ -153,7 +159,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    color_array = gen_color_from_string(H4, 4).astype(np.float32)  # ハミングコード
+    color_array = gen_color_from_string(H4, 4).astype(np.float32)
     id_color = gen_color()
 
 
@@ -191,7 +197,6 @@ if __name__ == '__main__':
     set_num = len(x_files)
 
     for w_file, x_file, y_file in zip(white_files, x_files, y_files):
-        print
         w_file, x_file, y_file
 
         cap_x = cv2.imread(os.path.join(input_dir, x_file)).astype(np.float32)
@@ -212,13 +217,13 @@ if __name__ == '__main__':
 
         output_x_file = os.path.join(output_dir, os.path.splitext(w_file)[0] + '_x.exr')
         output_y_file = os.path.join(output_dir, os.path.splitext(w_file)[0] + '_y.exr')
-        cv2.imwrite(output_x_file, decoded_x)
-        cv2.imwrite(output_y_file, decoded_y)
+        print(cv2.imwrite(output_x_file, decoded_x))
+        print(cv2.imwrite(output_y_file, decoded_y))
 
         output_8bit_x_file = os.path.join(output_8bit_dir, os.path.splitext(w_file)[0] + '_x.png')
         output_8bit_y_file = os.path.join(output_8bit_dir, os.path.splitext(w_file)[0] + '_y.png')
-        cv2.imwrite(output_8bit_x_file, decoded_x.astype(np.uint8))
-        cv2.imwrite(output_8bit_y_file, decoded_y.astype(np.uint8))
+        print(cv2.imwrite(output_8bit_x_file, decoded_x.astype(np.uint8)))
+        print(cv2.imwrite(output_8bit_y_file, decoded_y.astype(np.uint8)))
 
         output_mask_file = os.path.join(output_mask_dir, os.path.splitext(w_file)[0] + '.png')
         cv2.imwrite(output_mask_file, mask)
