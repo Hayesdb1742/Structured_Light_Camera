@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Constants
-INPUT_DIR = "calibImages"
+INPUT_DIR = "testCalib"
 OUTPUT_DIR = "decoded"
 CHESSBOARD_SIZE = (9, 6)
 
@@ -50,7 +50,7 @@ def perform_stereo_calibration(objpoints, camera_corners, projector_corners, cam
     return R, T
 
 if __name__ == "__main__":
-    files = os.listdir(INPUT_DIR)
+    files = sorted(os.listdir(INPUT_DIR), key=lambda x: os.path.getctime(os.path.join(INPUT_DIR, x)))
     white_files = files[::3]
 
     all_camera_corners = []
