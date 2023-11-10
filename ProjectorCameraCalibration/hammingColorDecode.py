@@ -4,6 +4,7 @@ import sys
 import argparse
 os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
 import cv2
+import time
 
 
 LEFT = 1
@@ -40,7 +41,7 @@ def gen_color_from_string(str_array, k):
 
 
 def get_seg(val, color_array):
-    # dif = color_array - val / val.max() * 255.0
+    # dif = color_array - val / val.max() * 255.
     max_val = val.max()
     if max_val == 0:
         dif = color_array  # or any other default value
@@ -52,9 +53,25 @@ def get_seg(val, color_array):
     id = np.argmin(dif)
     return id
 
+def get_seg_Hayes(val, color_array):
+    max_val = val.max()
+    dif = np.empty(val.shape[0])
+    if max_val == 0:
+        dif = color_array
+    # Loop over each row in val
+    else:
+        for i in range(val.shape[0]):
+        # Perform the vectorized operation for each row
+            dif[i] = np.abs(color_array - val[i] / max_val * 255.0).sum()
+
+    # Find the index with the minimum value
+    id = np.argmin(dif)
+
+    return id
+
 
 def get_segment_image(img, mask, id_color):
-    
+    start_time = time.time()
     h, w = img.shape[:2]
 
     seg = np.zeros(img.shape[:2], dtype=np.int32)
@@ -65,6 +82,24 @@ def get_segment_image(img, mask, id_color):
 
     positive_indices = np.where(mask >0)
 
+    end_time = time.time()
+
+    # Calculate and print the elapsed time
+    elapsed_time = end_time - start_time
+    print(f"Elapsed Time: {elapsed_time} seconds")
+    return seg
+
+def get_segment_image_Hayes(img, mask, id_color):
+    start_time = time.time()
+    mask_condition = mask > 0
+    seg = np.zeros(img.shape[:2], dtype=np.int32)
+    print(seg.shape, mask_condition.shape)
+    seg[mask_condition] = get_seg_Hayes(img[mask_condition], id_color) + 1
+    end_time = time.time()
+
+    # Calculate and print the elapsed time
+    elapsed_time = end_time - start_time
+    print(f"Elapsed Time: {elapsed_time} seconds")
     return seg
 
 
@@ -120,7 +155,9 @@ def get_seg_str_from_seg_id(seg_seq):
 
 
 def decode_x(cap_v, mask, color_array, id_color):
-    seg_img = get_segment_image(cap_v, mask, id_color)
+    seg_img_test = get_segment_image_Hayes(cap_v, mask, id_color)
+    seg_img = get_segment_image(cap_v,mask, id_color)
+    print("Arrays are correct: ", seg_img == seg_img_test)
     h, w = mask.shape[:2]
 
     decoded_img = np.zeros(mask.shape[:2], np.float32)
