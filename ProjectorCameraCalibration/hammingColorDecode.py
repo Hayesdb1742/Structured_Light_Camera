@@ -4,7 +4,8 @@ import sys
 import argparse
 os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
 import cv2
-import time
+from natsort import natsorted
+import glob
 
 
 LEFT = 1
@@ -41,7 +42,7 @@ def gen_color_from_string(str_array, k):
 
 
 def get_seg(val, color_array):
-    # dif = color_array - val / val.max() * 255.
+    # dif = color_array - val / val.max() * 255.0
     max_val = val.max()
     if max_val == 0:
         dif = color_array  # or any other default value
@@ -53,25 +54,9 @@ def get_seg(val, color_array):
     id = np.argmin(dif)
     return id
 
-def get_seg_Hayes(val, color_array):
-    max_val = val.max()
-    dif = np.empty(val.shape[0])
-    if max_val == 0:
-        dif = color_array
-    # Loop over each row in val
-    else:
-        for i in range(val.shape[0]):
-        # Perform the vectorized operation for each row
-            dif[i] = np.abs(color_array - val[i] / max_val * 255.0).sum()
-
-    # Find the index with the minimum value
-    id = np.argmin(dif)
-
-    return id
-
 
 def get_segment_image(img, mask, id_color):
-    start_time = time.time()
+    
     h, w = img.shape[:2]
 
     seg = np.zeros(img.shape[:2], dtype=np.int32)
@@ -82,24 +67,6 @@ def get_segment_image(img, mask, id_color):
 
     positive_indices = np.where(mask >0)
 
-    end_time = time.time()
-
-    # Calculate and print the elapsed time
-    elapsed_time = end_time - start_time
-    print(f"Elapsed Time: {elapsed_time} seconds")
-    return seg
-
-def get_segment_image_Hayes(img, mask, id_color):
-    start_time = time.time()
-    mask_condition = mask > 0
-    seg = np.zeros(img.shape[:2], dtype=np.int32)
-    print(seg.shape, mask_condition.shape)
-    seg[mask_condition] = get_seg_Hayes(img[mask_condition], id_color) + 1
-    end_time = time.time()
-
-    # Calculate and print the elapsed time
-    elapsed_time = end_time - start_time
-    print(f"Elapsed Time: {elapsed_time} seconds")
     return seg
 
 
@@ -155,9 +122,7 @@ def get_seg_str_from_seg_id(seg_seq):
 
 
 def decode_x(cap_v, mask, color_array, id_color):
-    seg_img_test = get_segment_image_Hayes(cap_v, mask, id_color)
-    seg_img = get_segment_image(cap_v,mask, id_color)
-    print("Arrays are correct: ", seg_img == seg_img_test)
+    seg_img = get_segment_image(cap_v, mask, id_color)
     h, w = mask.shape[:2]
 
     decoded_img = np.zeros(mask.shape[:2], np.float32)
@@ -190,7 +155,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input_dir', '-in_dir', type=str, default='testCalib')
-    parser.add_argument('--lit_thr', '-lit_thr', type=int, default=40)
+    parser.add_argument('--lit_thr', '-lit_thr', type=int, default=10)
     parser.add_argument('--output_dir', '-out_dir', type=str, default='decoded')
     parser.add_argument('--output_8bit_dir', '-out_8bit_dir', type=str, default='decoded_8bit')
     parser.add_argument('--output_mask_dir', '-out_mask_dir', type=str, default='mask')
@@ -223,8 +188,27 @@ if __name__ == '__main__':
     if not os.path.exists(output_mask_dir):
         os.mkdir(output_mask_dir)
 
-    files = os.listdir(input_dir)
+    files = sorted(os.listdir(input_dir), key=lambda x: os.path.getmtime(os.path.join(input_dir, x)))
 
+    # Define the directory name
+    directory_name = 'testCalib'
+
+    # Define the pattern for the filenames
+    pattern = os.path.join(directory_name, '*.jpg')
+
+    files_with_path = glob.glob(pattern)
+
+    # Extract just the file names without the full path
+    file_names = [os.path.basename(file) for file in files_with_path]
+
+    # Separate file names based on 'x' and 'y' in their names
+
+    # Create an array containing the files
+    all_files = natsorted(file_names)
+    files = all_files
+    # Display the resulting array
+
+    print(files)
     if not len(files) % 3 == 0:
         print
         'Number of images must be in multiples of 3.'
@@ -257,13 +241,13 @@ if __name__ == '__main__':
 
         output_x_file = os.path.join(output_dir, os.path.splitext(w_file)[0] + '_x.exr')
         output_y_file = os.path.join(output_dir, os.path.splitext(w_file)[0] + '_y.exr')
-        print(cv2.imwrite(output_x_file, decoded_x))
-        print(cv2.imwrite(output_y_file, decoded_y))
+        print(cv2.imwrite(output_x_file, decoded_x), ":%s" % output_x_file)
+        print(cv2.imwrite(output_y_file, decoded_y), ":%s" % output_y_file)
 
         output_8bit_x_file = os.path.join(output_8bit_dir, os.path.splitext(w_file)[0] + '_x.png')
         output_8bit_y_file = os.path.join(output_8bit_dir, os.path.splitext(w_file)[0] + '_y.png')
-        print(cv2.imwrite(output_8bit_x_file, decoded_x.astype(np.uint8)))
-        print(cv2.imwrite(output_8bit_y_file, decoded_y.astype(np.uint8)))
+        print(cv2.imwrite(output_8bit_x_file, decoded_x.astype(np.uint8)), ":%s" % output_8bit_x_file)
+        print(cv2.imwrite(output_8bit_y_file, decoded_y.astype(np.uint8)), ":%s" % output_8bit_y_file)
 
         output_mask_file = os.path.join(output_mask_dir, os.path.splitext(w_file)[0] + '.png')
         cv2.imwrite(output_mask_file, mask)

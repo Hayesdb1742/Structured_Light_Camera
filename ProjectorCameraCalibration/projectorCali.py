@@ -2,6 +2,8 @@ import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
 import cv2
 import numpy as np
+import glob
+from natsort import natsorted
 
 
 # Constants
@@ -50,7 +52,24 @@ def perform_stereo_calibration(objpoints, camera_corners, projector_corners, cam
     return R, T
 
 if __name__ == "__main__":
-    files = sorted(os.listdir(INPUT_DIR), key=lambda x: os.path.getctime(os.path.join(INPUT_DIR, x)))
+    files = sorted(os.listdir(INPUT_DIR), key=lambda x: os.path.getmtime(os.path.join(INPUT_DIR, x)))
+
+    # Define the directory name
+    directory_name = 'testCalib'
+
+    # Define the pattern for the filenames
+    pattern = os.path.join(directory_name, '*.jpg')
+
+    files_with_path = glob.glob(pattern)
+
+    # Extract just the file names without the full path
+    file_names = [os.path.basename(file) for file in files_with_path]
+
+    # Separate file names based on 'x' and 'y' in their names
+
+    # Create an array containing the files
+    all_files = natsorted(file_names)
+    files = all_files
     print(files)
     white_files = files[::3]
 
