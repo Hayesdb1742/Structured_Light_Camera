@@ -63,6 +63,8 @@ def get_segment_image(img, mask, id_color):
             if mask[j, i] > 0:
                 seg[j, i] = get_seg(img[j, i], id_color) + 1
 
+    positive_indices = np.where(mask >0)
+
     return seg
 
 

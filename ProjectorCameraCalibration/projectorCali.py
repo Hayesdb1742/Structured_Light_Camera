@@ -51,6 +51,7 @@ def perform_stereo_calibration(objpoints, camera_corners, projector_corners, cam
 
 if __name__ == "__main__":
     files = sorted(os.listdir(INPUT_DIR), key=lambda x: os.path.getctime(os.path.join(INPUT_DIR, x)))
+    print(files)
     white_files = files[::3]
 
     all_camera_corners = []
