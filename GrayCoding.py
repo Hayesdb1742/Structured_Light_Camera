@@ -1,9 +1,16 @@
 import numpy as np
 import cv2 as cv
 import math
+import os
+import sys
+import matplotlib.pyplot as plt
+import subprocess
+
 
 N = 10 #user defined numImages (more precise for greater N, max for HD at 10)
 projector_size = (1920, 1080) #projector defined
+path = os.getcwd()
+
 
 def createGrayPattern(N, projector_size):
     num_patterns = 2**N
@@ -16,26 +23,10 @@ def createGrayPattern(N, projector_size):
         if gray_code % 2 == 0:
             pattern[:, i * stripe_width: (i + 1) * stripe_width] = 255
     
-    directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures"  # Change to Pi directory
+    directory = path  # Change to Pi directory
     filename = "gray_pattern{}.png".format(N)
-    cv.imwrite(directory + "\\" + filename, pattern)
+    cv.imwrite(directory + "/" + filename, pattern)
     
-def pbpthreshold(image,threshold):
-    #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
-    image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    flatimage = image.flatten()
-    flatthreshold = threshold.flatten()
-    if len(image) != len(threshold):
-        print("Image and Threshold Matrix are incompatible sizes")
-        return
-    for i in range(len(flatimage)):
-        if flatimage[i] < flatthreshold[i]:
-            flatimage[i] = 0
-        elif flatimage[i] >= flatthreshold[i]:
-            flatimage[i] = 255
-            
-    image = flatimage.reshape(image.shape)
-    return image
     
 def pbpthreshold(image,threshold):
     #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
@@ -53,6 +44,7 @@ def pbpthreshold(image,threshold):
     image = flatimage.reshape(image.shape)
     return image
 
+
 def decodeGrayPattern(image_array, N):
     height, width = image_array[0].shape
 
@@ -65,7 +57,7 @@ def decodeGrayPattern(image_array, N):
             for i in range(N):
                 # Convert 255 to 1 and 0 to 0
                 binary_str += '1' if image_array[i][y, x] == 255 else '0'
-                
+                 
             # Convert binary string to its integer representation
             decimal = int(binary_str, 2)
             
@@ -77,9 +69,11 @@ def decodeGrayPattern(image_array, N):
     
     return decoded_image
 
+
 def binaryToGray(binary_integer):
     binary_integer ^= (binary_integer >> 1)
     return binary_integer
+
 
 def visualize_point_cloud(points_3D):
     # Convert points from 3D matrix to list of 3D coordinates
@@ -95,7 +89,7 @@ def visualize_point_cloud(points_3D):
     o3d.visualization.draw_geometries([point_cloud])
 
 
-
+    
 for i in range(N):
     createGrayPattern(i + 1, projector_size)
    
@@ -107,48 +101,78 @@ camera_frame = (1920,1080) #x,y dimensions (same as projector)
 camera.set(cv.CAP_PROP_FRAME_WIDTH, camera_frame[0])
 camera.set(cv.CAP_PROP_FRAME_HEIGHT, camera_frame[1]) 
 # Capture Initial image with no projection
-ret, frame = camera.read()
-filename = "blank_image.png"
-directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
 
-# Capture Image with all White projection
+#Capture blankImage
+blankPoints = np.zeros((1080,1920,3), dtype=np.uint8)
+blackProjection = subprocess.Popen("feh --fullscreen -Y black_screen.jpg", shell=True)
+cv.waitKey(500)
+for i in range(20):
+    ret, frame = camera.read()
 ret, frame = camera.read()
-filename = "full_image.png"
+filename = "./grayCodePics/blank_image.png"
+directory = path #change to PI directory
+# Capture Image with all White projection
+if not ret:
+    print("Image was not captured")
+    exit(0)
+else:
+    print("blank image captured...")
+cv.imwrite(filename,frame)
+subprocess.run(f"kill -9 {blackProjection.pid+1}", shell=True)
+blackProjection.terminate()
+
+projection = subprocess.Popen(f"feh --fullscreen -Y white_image.png", shell=True)
+cv.waitKey(500)
+for i in range(20):
+    ret, frame = camera.read()
+ret, frame = camera.read()
+filename = "./grayCodePics/full_image.png"
+if not ret:
+    print("Image not saved")
+else:
+    print("full image saved...")
+cv.imwrite(filename, frame)
+subprocess.run(f"kill -9 {projection.pid +1}", shell=True)
+projection.terminate()
 
 # Loop through and capture multiple images after projection
 for i in range(N):
     # Project Image # 
-    
+    # To-Do: Project image
+    projection = subprocess.Popen(f"feh --fullscreen -Y gray_pattern{i+1}.png", shell=True)
+    cv.waitKey(500)
+    #Also need to add while loop
+    for j in range(20):
+        ret, frame = camera.read()
     # Capture a single frame from the camera
     ret, frame = camera.read()
-    filename = "image_{}.png".format(i+1)
-    directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\GrayCodedPictures" #change to PI directory
-    cv.imwrite(directory + "\\" + filename, frame)
+    if not ret:
+        print(f"Projection Image: {i} was not captured")
+        exit(0)
+    else:
+        print(f"Succesfully captured {i}")
+    filename = "./grayCodePics/image_{}.png".format(i+1)
+    directory = path #change to PI directory
+    imgSave = cv.imwrite(filename, frame)
+    if not imgSave:
+        print("Test image did not save")
+    subprocess.run(f"kill -9 {projection.pid +1}", shell=True)
+    projection.terminate()
 
 # Release the camera
 camera.release()
 
-
-blankImage = cv.imread("C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\blankImage.bmp")
-fullImage = cv.imread("C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\fullImage.bmp")
+blankImage = cv.imread("./grayCodePics/blank_image.png")
+fullImage = cv.imread("./grayCodePics/full_image.png")
+if not blankImage.any():
+    print("Blank Image not found")
+if not fullImage.any():
+    print("Full Image not found")
+    
 blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
 fullImage = cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
 N = 10
 image_array = np.empty((N,fullImage.shape[0],fullImage.shape[1]), dtype=blankImage.dtype)
 avg_thresh = cv.addWeighted(blankImage,0.5,fullImage,0.5,0) #add white and blank images for thresholding and average
 avg_thresh = cv.divide(avg_thresh,2)                           #divide to finish averaging (per pixel thresholding)
-
-
-for i in range(N):
-    # load image array and pre-process images
-    filein = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImages\\{}.bmp".format(i+1)
-    image = cv.imread(filein)
-    image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    #Convert to black and white based on grascale (average per pixel thresholding)
-    image_thresh = pbpthreshold(image_gray,avg_thresh)
-    image_array[i] = image_thresh
-    
-decoded_image = decodeGrayPattern(image_array,N)
-plt.imshow(decoded_image,cmap='gray')
-plt.show()
 
