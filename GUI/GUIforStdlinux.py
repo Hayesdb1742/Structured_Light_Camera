@@ -12,14 +12,15 @@ current_script = 0
 # GUI Functions
 def connect_to_pi():
     global ssh_client, is_connected
+    global numRotations
     # Change the username and password here. Make sure you have the OSU VPN connected
-    MY_USERNAME = "???????????????????????????????"  # Your SSH username
+    MY_USERNAME = "bentley.206"  # Your SSH username
     MY_HOST = "rh050.coeit.osu.edu"  # Your SSH host
-    MY_PASSWORD = "???????????????????????????????"  # Your SSH password
+    MY_PASSWORD = "Jorge1742!!!"  # Your SSH password
 
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
+    numRotations = 0
     try:
         ssh_client.connect(MY_HOST, username=MY_USERNAME, password=MY_PASSWORD)
         is_connected = True
@@ -48,37 +49,43 @@ def disconnect_from_pi():
     disconnect_button.config(state=tk.DISABLED)
     terminate_button.config(state=tk.DISABLED)  # Disable the terminate button upon disconnection
 
-def execute_script(script_name):
+def execute_script(script_name, numIter):
     global ssh_client
     if is_connected:
         # change the test script path here
-        stdin, stdout, stderr = ssh_client.exec_command(f'python3 /home/??????????????????????/{script_name}')
+        stdin, stdout, stderr = ssh_client.exec_command(f'python3 scripts/Structured_Light_Camera/imageCapture.py {numIter}')
         return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
     return None, None
 
 def start_script():
+
     global is_running, current_script
     if is_connected and not is_running:
         is_running = True
         current_script = 0
-        start_next_script()
+        start_next_script(numRotations)
         terminate_button.config(state=tk.NORMAL)  # Enable the terminate button when script starts
 
-def start_next_script():
+def start_next_script(numRotations):
+    print(numRotations)
     global current_script, scripts_to_run
-    if current_script < len(scripts_to_run):
-        script_name = scripts_to_run[current_script]
-        output, error = execute_script(script_name)
+    # Need 6 iterations 180 degrees / 30 degrees = 6
+    if numRotations < 6:
+        script_name = "imageCapture.py"
+        output, error = execute_script(script_name, numRotations+1)
         if output or error:
             execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
             current_script += 1
+            start_button.config(text="Rotate objects", command=incrementCount(numRotations), state=tk.DISABLED)
         else:
             execution_status_label.config(text="Failed to execute script.")
             terminate_script()
-        if current_script < len(scripts_to_run):
-            root.after(1000, start_next_script)  # Proceed to next script after 1 second
-        else:
-            transfer_stl()
+    else:
+        start_button.config(text="Done")
+
+def incrementCount(numRotations):
+    numRotations += 1
+    start_next_script(numRotations)  
 
 def terminate_script():
     global is_running, current_script

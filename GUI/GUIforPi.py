@@ -55,7 +55,7 @@ def disconnect_from_pi():
     disconnect_button.config(state=tk.DISABLED)
     terminate_button.config(state=tk.DISABLED)  # Disable the terminate button upon disconnection
 
-def execute_script(script_name):
+def execute_script(script_name, numIter):
     global ssh_client
     if is_connected:
         # Change the directory here
@@ -73,19 +73,30 @@ def start_script():
 
 def start_next_script():
     global current_script, scripts_to_run
-    if current_script < len(scripts_to_run):
-        script_name = scripts_to_run[current_script]
-        output, error = execute_script(script_name)
+    # Need 6 iterations 180 degrees / 30 degrees = 6
+    for i in range(1,6):
+        script_name = "imageCapture.py"
+        output, error = execute_script(script_name, i)
         if output or error:
             execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
             current_script += 1
         else:
             execution_status_label.config(text="Failed to execute script.")
             terminate_script()
-        if current_script < len(scripts_to_run):
-            root.after(1000, start_next_script)  # Proceed to next script after 1 second
-        else:
-            transfer_stl()
+
+    # if current_script < len(scripts_to_run):
+    #     script_name = scripts_to_run[current_script]
+    #     output, error = execute_script(script_name)
+    #     if output or error:
+    #         execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
+    #         current_script += 1
+    #     else:
+    #         execution_status_label.config(text="Failed to execute script.")
+    #         terminate_script()
+    #     if current_script < len(scripts_to_run):
+    #         root.after(1000, start_next_script)  # Proceed to next script after 1 second
+    #     else:
+    #         transfer_stl()
 
 def terminate_script():
     global is_running, current_script
