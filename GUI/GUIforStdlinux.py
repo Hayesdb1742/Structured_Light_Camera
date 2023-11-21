@@ -76,7 +76,7 @@ def start_next_script(numRotations):
         if output or error:
             execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
             current_script += 1
-            start_button.config(text="Rotate objects", command=incrementCount(numRotations), state=tk.DISABLED)
+            start_button.config(text="Rotate objects", command=lambda:incrementCount(numRotations))
         else:
             execution_status_label.config(text="Failed to execute script.")
             terminate_script()
@@ -84,8 +84,7 @@ def start_next_script(numRotations):
         start_button.config(text="Done")
 
 def incrementCount(numRotations):
-    numRotations += 1
-    start_next_script(numRotations)  
+    start_next_script(numRotations+1)  
 
 def terminate_script():
     global is_running, current_script
