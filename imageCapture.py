@@ -1,4 +1,4 @@
-import cv2
+mport cv2
 import os
 import random
 import subprocess
