@@ -8,6 +8,7 @@ is_connected = False
 is_running = False
 scripts_to_run = ['file_name_1.py', 'file_name_2.py', 'file_name_3.py']
 current_script = 0
+numRotations = 0
 
 # GUI Functions
 import socket  # Import the socket library to handle socket exceptions
@@ -15,6 +16,7 @@ import socket  # Import the socket library to handle socket exceptions
 
 def connect_to_pi():
     global ssh_client, is_connected
+    
     MY_USERNAME = "lightwork"  # Your SSH username
     MY_HOST = "raspberrypi.local"  # Your SSH host
     MY_PASSWORD = "TEAM10"  # Your SSH password
@@ -59,7 +61,7 @@ def execute_script(script_name, numIter):
     global ssh_client
     if is_connected:
         # Change the directory here
-        stdin, stdout, stderr = ssh_client.exec_command(f'python3 /home/lightwork/scripts/Structured_Light_Camera/{script_name}')
+        stdin, stdout, stderr = ssh_client.exec_command(f'export DISPLAY=:0; cd /home/lightwork/scripts/Structured_Light_Camera; libcamerify python3 {script_name} {numIter+1}')
         return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
     return None, None
 
@@ -68,21 +70,28 @@ def start_script():
     if is_connected and not is_running:
         is_running = True
         current_script = 0
-        start_next_script()
+        start_next_script(numRotations)
         terminate_button.config(state=tk.NORMAL)  # Enable the terminate button when script starts
 
-def start_next_script():
+def start_next_script(numRotations):
+    print(numRotations)
     global current_script, scripts_to_run
     # Need 6 iterations 180 degrees / 30 degrees = 6
-    for i in range(1,6):
+    if numRotations < 6:
         script_name = "imageCapture.py"
-        output, error = execute_script(script_name, i)
+        output, error = execute_script(script_name, numRotations+1)
         if output or error:
             execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
             current_script += 1
+            start_button.config(text="Rotate objects", command=lambda:incrementCount(numRotations))
         else:
             execution_status_label.config(text="Failed to execute script.")
             terminate_script()
+    else:
+        start_button.config(text="Done")
+
+def incrementCount(numRotations):
+    start_next_script(numRotations+1)  
 
     # if current_script < len(scripts_to_run):
     #     script_name = scripts_to_run[current_script]
