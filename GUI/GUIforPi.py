@@ -61,7 +61,7 @@ def execute_script(script_name, numIter):
     global ssh_client
     if is_connected:
         # Change the directory here
-        stdin, stdout, stderr = ssh_client.exec_command(f'export DISPLAY=:0; cd /home/lightwork/scripts/Structured_Light_Camera; libcamerify python3 {script_name} {numIter+1}')
+        stdin, stdout, stderr = ssh_client.exec_command(f'v4l2-ctl -d /dev/v4l-subdev0 --set-ctrl exposure=10; export DISPLAY=:0; cd /home/lightwork/scripts/Structured_Light_Camera; libcamerify python3 {script_name} {numIter+1}')
         return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
     return None, None
 
@@ -79,7 +79,7 @@ def start_next_script(numRotations):
     # Need 6 iterations 180 degrees / 30 degrees = 6
     if numRotations < 6:
         script_name = "imageCapture.py"
-        output, error = execute_script(script_name, numRotations+1)
+        output, error = execute_script(script_name, numRotations)
         if output or error:
             execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
             current_script += 1
