@@ -10,7 +10,7 @@ class SLscan:
         :param height: CAM Height in pixels
         :param directory: String of desired directory for saving
         """
-        self.width = width
+        self.width = width #currently assumes same height and width for camera and projector (1920x1080)
         self.height = height
         
         coeiff = np.load(directory + "\\" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
@@ -23,10 +23,7 @@ class SLscan:
         self.directory = directory ## SET TO PI Directory
         
     def generate_gray_code_patterns(self):
-        """
-        :param width: Projector Width
-        :param Height: Projector Height
-        """
+        
         # Calculate number of bits required to represent the width
         num_bits = math.ceil(math.log2(self.width))
         self.N = num_bits
@@ -189,6 +186,9 @@ class SLscan:
         return intersection_point
 
     def calculate_3D_points(self,decoded_image):
+        """
+        :param decoded_image: Matrix containing integer numbers of the column values from gray code decoding. 
+        """
         height, width = decoded_image.shape
         self.points_3D = []  # Initialize as an empty list
 
@@ -244,7 +244,3 @@ class SLscan:
 # scanner.calculate_3D_points(decoded)
 # scanner.visualize_point_cloud()
 # scanner.save(view=0)
-
-
-
-
