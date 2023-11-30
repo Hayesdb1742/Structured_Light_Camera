@@ -6,7 +6,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import subprocess
-from StructuredLight import SLscan as SL
+from StructuredLight import SLscan
 
 
 path = os.getcwd()
@@ -22,21 +22,19 @@ numberRotations= sys.argv[1]
 directory = os.getcwd()
 width = 1920
 height = 1080
-scanner = SL(width,height,directory)
+scanner = SLscan(width,height,directory)
 N = scanner.generate_gray_code_patterns()     ##only needs to generate one time, just needs to be saved in PI, N is number of images
 
 # Initialize the camera
 camera = cv.VideoCapture(0)
 
 # Set camera properties
-camera_frame = (1920,1080) #x,y dimensions (same as projector)
-camera.set(cv.CAP_PROP_FRAME_WIDTH, camera_frame[0])
-camera.set(cv.CAP_PROP_FRAME_HEIGHT, camera_frame[1]) 
+camera.set(cv.CAP_PROP_FRAME_WIDTH, width)
+camera.set(cv.CAP_PROP_FRAME_HEIGHT, height) 
 # Capture Initial image with no projection
 
 #Capture blankImage
-blankPoints = np.zeros((1080,1920,3), dtype=np.uint8)
-blackProjection = subprocess.Popen("feh --fullscreen -Y black_screen.jpg", shell=True)
+blackProjection = subprocess.Popen("feh --fullscreen -Y blank_image.png", shell=True)
 cv.waitKey(500)
 for i in range(20):
     ret, frame = camera.read()
