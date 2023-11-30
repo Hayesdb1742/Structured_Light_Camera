@@ -13,7 +13,7 @@ class SLscan:
         self.width = width #currently assumes same height and width for camera and projector (1920x1080)
         self.height = height
         
-        coeiff = np.load(directory + "\\" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
+        coeiff = np.load(directory + "/" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
         self.lst = coeiff.files
         self.R = coeiff['R']
         self.t = coeiff['T']
@@ -41,11 +41,11 @@ class SLscan:
         for i in range(num_bits):
             pattern[:, :, i] = np.tile(gray_codes[(np.arange(self.width) + offset), i].reshape(1, -1), (self.height, 1))
             filename = "gray_pattern{}.png".format(i)
-            cv.imwrite(self.directory + "\\" + filename, 255*pattern[:,:,i]) 
+            cv.imwrite(self.directory + "/" + filename, 255*pattern[:,:,i]) 
         blankImage = np.zeros((self.height,self.width), dtype=np.uint8)
         fullImage = 255*np.ones((self.height,self.width),dtype=np.uint8)
-        cv.imwrite(self.directory + "\\blank_image.png", blankImage)
-        cv.imwrite(self.directory + "\\full_image.png", fullImage)
+        cv.imwrite(self.directory + "/blank_image.png", blankImage)
+        cv.imwrite(self.directory + "/full_image.png", fullImage)
         
         return self.N
 
@@ -132,9 +132,9 @@ class SLscan:
 
     def load_images(self):
         #Open cv does everything in dtype uint8, all processing done in uint8 to avoid switching back and forth wasting time/mem
-        blankImage = cv.imread(self.directory+"\\"+"empty_image.png") # all black projection image capture
+        blankImage = cv.imread(self.directory+"/"+"empty_image.png") # all black projection image capture
         blankImage = self.undistort(blankImage)
-        fullImage = cv.imread(self.directory+"\\"+"full_image.png") # all white projection image capture
+        fullImage = cv.imread(self.directory+"/"+"full_image.png") # all white projection image capture
         fullImage = self.undistort(fullImage)
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
@@ -143,7 +143,7 @@ class SLscan:
     
         for i in range(self.N):
             filein = "image_{}.png".format(i)
-            image = cv.imread(self.directory+"\\"+filein)
+            image = cv.imread(self.directory+"/"+filein)
             image = self.undistort(image) 
             image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
             image_thresh = self.pbpthreshold(image_gray)
@@ -228,7 +228,7 @@ class SLscan:
         """
         :param view: Int value of view number.
         """
-        filename = self.directory + "\\" + "view_" + str(view) + ".pcd"
+        filename = self.directory + "/" + "view_" + str(view) + ".pcd"
         pcd = self.point_cloud
         o3d.io.write_point_cloud(filename,pcd)
         
