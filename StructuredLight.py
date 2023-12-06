@@ -18,6 +18,9 @@ class SLscan:
         self.proj_w = proj_w
         self.proj_h = proj_h
         
+        # Calculate number of bits required to represent the width
+        self.N = math.ceil(math.log2(self.proj_w))
+        
         coeiff = np.load(directory + "/" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
         self.lst = coeiff.files
         self.R = coeiff['R']
@@ -28,10 +31,7 @@ class SLscan:
         self.directory = directory ## SET TO PI Directory
         
     def generate_gray_code_patterns(self):
-        
-        # Calculate number of bits required to represent the width
-        num_bits = math.ceil(math.log2(self.proj_w))
-        self.N = num_bits
+        num_bits = self.N
         # Calculate the offset to center the pattern
         offset = (2 ** num_bits - self.proj_w) // 2
 
@@ -137,9 +137,9 @@ class SLscan:
 
     def load_images(self):
         #Open cv does everything in dtype uint8, all processing done in uint8 to avoid switching back and forth wasting time/mem
-        blankImage = cv.imread(self.directory+"/"+"empty_image.png") # all black projection image capture
+        blankImage = cv.imread(self.directory+"\\"+"blank_image.png") # all black projection image capture
         blankImage = self.undistort(blankImage)
-        fullImage = cv.imread(self.directory+"/"+"full_image.png") # all white projection image capture
+        fullImage = cv.imread(self.directory+"\\"+"full_image.png") # all white projection image capture
         fullImage = self.undistort(fullImage)
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
@@ -148,7 +148,7 @@ class SLscan:
     
         for i in range(self.N):
             filein = "image_{}.png".format(i)
-            image = cv.imread(self.directory+"/"+filein)
+            image = cv.imread(self.directory+"\\"+filein)
             image = self.undistort(image) 
             image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
             image_thresh = self.pbpthreshold(image_gray)
@@ -195,7 +195,7 @@ class SLscan:
         :param decoded_image: Matrix containing integer numbers of the column values from gray code decoding. 
         """
         height, width = decoded_image.shape
-        self.points_3D = []  # Initialize as an empty list
+        points_3D = []  # Initialize as an empty list
 
         self.cam_inv = np.linalg.inv(self.K)
         self.proj_inv = np.linalg.inv(self.P_proj)
@@ -233,20 +233,23 @@ class SLscan:
         """
         :param view: Int value of view number.
         """
-        filename = self.directory + "/" + "view_" + str(view) + ".pcd"
+        filename = self.directory + "\\" + "view_" + str(view) + ".pcd"
         pcd = self.point_cloud
         o3d.io.write_point_cloud(filename,pcd)
         
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
-# directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImagesPi"
-# cam_resolution = (4608,2592)
-# proj_resolution = (1920,1080)
-# scanner = SLscan(cam_resolution,proj_resolution,directory)
+directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImagesPi"
+cam_resolution = (2560,1440)
+proj_resolution = (1920,1080)
+scanner = SLscan(cam_resolution,proj_resolution,directory)
 # scanner.generate_gray_code_patterns()
-# ## PROJECT AND TAKE PICTURES HERE ##
+## PROJECT AND TAKE PICTURES HERE ##
 
-# captured_patterns = scanner.load_images()
+captured_patterns = scanner.load_images()
+cv.imshow("test",captured_patterns[5]*255)
+cv.waitKey(0)
+cv.destroyAllWindows()
 # decoded = scanner.preprocess(captured_patterns,threshold=100)
 # scanner.calculate_3D_points(decoded)
 # scanner.visualize_point_cloud()
