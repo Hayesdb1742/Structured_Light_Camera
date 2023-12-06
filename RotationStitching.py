@@ -1,13 +1,25 @@
 import open3d as o3d
 import numpy as np
-import os
+
+def load_csv(csv_file):
+    # Load points from CSV file
+    points = np.loadtxt(csv_file, delimiter=",", skiprows=1)  
+
+    # Filter out NaN and infinity values
+    points = points[~np.isnan(points).any(axis=1)]
+    points = points[~np.isinf(points).any(axis=1)]
+
+    # Create a point cloud object
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(points)
+    return point_cloud
 
 def stitch_pcds(directory, rotation_axis='y', degrees_per_capture=30):
     """
     Stitch together point clouds of an object rotating in front of a stationary camera.
     :param directory: Directory where the point cloud files are stored.
     :param rotation_axis: Axis of rotation ('x', 'y', or 'z').
-    :param degrees_per_capture: Degrees rotated between each capture.
+    :param degrees_per_capture: MUST BE CLOCK WISE FOR Y. Degrees rotated between each capture. 
     :return: Stitched point cloud.
     """
     axis_dict = {'x': 0, 'y': 1, 'z': 2}
@@ -20,15 +32,9 @@ def stitch_pcds(directory, rotation_axis='y', degrees_per_capture=30):
     # Load point cloud files
     o3d_point_clouds = []
     for i in range(num_files):
-        filename = directory + "\\view_" + str(i)
-        if os.path.exists(filename):
-            pc = o3d.io.read_point_cloud(filename)
-            o3d_point_clouds.append(pc)
-        else:
-            print(f"File not found: {filename}")
-
-    if not o3d_point_clouds:
-        raise ValueError("No point cloud files found.")
+        filename = directory + "/view_" + str(i)
+        point_cloud = load_csv(filename)
+        o3d_point_clouds.append(point_cloud)
     
     # Stitch point clouds
     stitched_pc = o3d_point_clouds[0]
@@ -48,10 +54,5 @@ def stitch_pcds(directory, rotation_axis='y', degrees_per_capture=30):
     
     return cleaned_pc
 
-# Example usage
-directory = "/path/to/pointcloud/files"
-file_prefix = "pointcloud"
-stitched_pc = stitch_pcds(directory, file_prefix, rotation_axis='z', degrees_per_capture=10)
 
 
-o3d.visualization.draw_geometries([stitched_pc])

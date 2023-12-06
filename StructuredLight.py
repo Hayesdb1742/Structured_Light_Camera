@@ -1,7 +1,6 @@
 import numpy as np
 import cv2 as cv
 import math
-import open3d as o3d
 
 class SLscan:
     def __init__(self, cam_resolution, proj_resolution, directory):
@@ -137,9 +136,9 @@ class SLscan:
 
     def load_images(self):
         #Open cv does everything in dtype uint8, all processing done in uint8 to avoid switching back and forth wasting time/mem
-        blankImage = cv.imread(self.directory+"\\"+"blank_image.png") # all black projection image capture
+        blankImage = cv.imread(self.directory+"/"+"blank_image.png") # all black projection image capture
         blankImage = self.undistort(blankImage)
-        fullImage = cv.imread(self.directory+"\\"+"full_image.png") # all white projection image capture
+        fullImage = cv.imread(self.directory+"/"+"full_image.png") # all white projection image capture
         fullImage = self.undistort(fullImage)
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
@@ -148,7 +147,7 @@ class SLscan:
     
         for i in range(self.N):
             filein = "image_{}.png".format(i)
-            image = cv.imread(self.directory+"\\"+filein)
+            image = cv.imread(self.directory+"/"+filein)
             image = self.undistort(image) 
             image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
             image_thresh = self.pbpthreshold(image_gray)
@@ -215,27 +214,14 @@ class SLscan:
                 points_3D.append(intersection_point)
         
         # Convert points_3D to a numpy array
-        points_3D = np.array(points_3D)
-
-        # Remove any points that are NaN or inf
-        points_3D = points_3D[~np.isnan(points_3D).any(axis=1)]
-        points_3D = points_3D[~np.isinf(points_3D).any(axis=1)]
-
-        # Convert the points to an open3d point cloud object
-        self.point_cloud = o3d.geometry.PointCloud()
-        self.point_cloud.points = o3d.utility.Vector3dVector(points_3D)
-
-    def visualize_point_cloud(self):
-        
-        o3d.visualization.draw_geometries([self.point_cloud])
+        self.points_3D = np.array(points_3D)
         
     def save(self,view=0):
         """
         :param view: Int value of view number.
         """
-        filename = self.directory + "\\" + "view_" + str(view) + ".pcd"
-        pcd = self.point_cloud
-        o3d.io.write_point_cloud(filename,pcd)
+        filename = self.directory + "/" + "view_" + str(view) + ".csv"
+        np.savetxt(filename, self.points_3D, delimiter=",", header="x,y,z", comments="")
         
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
@@ -252,5 +238,4 @@ cv.waitKey(0)
 cv.destroyAllWindows()
 # decoded = scanner.preprocess(captured_patterns,threshold=100)
 # scanner.calculate_3D_points(decoded)
-# scanner.visualize_point_cloud()
 # scanner.save(view=0)
