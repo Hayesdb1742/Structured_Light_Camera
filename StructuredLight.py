@@ -4,14 +4,19 @@ import math
 import open3d as o3d
 
 class SLscan:
-    def __init__(self, width, height, directory):
+    def __init__(self, cam_resolution, proj_resolution, directory):
         """
-        :param width: CAM Width in pixels
-        :param height: CAM Height in pixels
+        :param cam_resolution: TUPLE of camera resolution
+        :param proj_resolution: TUPLE of projector resolution
         :param directory: String of desired directory for saving
         """
-        self.width = width #currently assumes same height and width for camera and projector (1920x1080)
-        self.height = height
+        cam_w, cam_h = cam_resolution[0],cam_resolution[1]
+        proj_w, proj_h = proj_resolution[0],proj_resolution[1]
+        
+        self.cam_w = cam_w #currently assumes same height and width for camera and projector (1920x1080)
+        self.cam_h = cam_h
+        self.proj_w = proj_w
+        self.proj_h = proj_h
         
         coeiff = np.load(directory + "/" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
         self.lst = coeiff.files
@@ -25,13 +30,13 @@ class SLscan:
     def generate_gray_code_patterns(self):
         
         # Calculate number of bits required to represent the width
-        num_bits = math.ceil(math.log2(self.width))
+        num_bits = math.ceil(math.log2(self.proj_w))
         self.N = num_bits
         # Calculate the offset to center the pattern
-        offset = (2 ** num_bits - self.width) // 2
+        offset = (2 ** num_bits - self.proj_w) // 2
 
         # Initialize pattern storage
-        pattern = np.zeros((self.height, self.width, num_bits), dtype=np.uint8)
+        pattern = np.zeros((self.proj_h, self.proj_w, num_bits), dtype=np.uint8)
         # Generate binary and Gray code numbers
         binary_numbers = np.array([list(format(i, '0' + str(num_bits) + 'b')) for i in range(2 ** num_bits)], dtype=np.uint8)
         gray_codes = np.bitwise_xor(binary_numbers[:, :-1], binary_numbers[:, 1:]) #XOR bitwise for gray coding
@@ -39,29 +44,29 @@ class SLscan:
         
         # Fill in the pattern
         for i in range(num_bits):
-            pattern[:, :, i] = np.tile(gray_codes[(np.arange(self.width) + offset), i].reshape(1, -1), (self.height, 1))
+            pattern[:, :, i] = np.tile(gray_codes[(np.arange(self.proj_w) + offset), i].reshape(1, -1), (self.height, 1))
             filename = "gray_pattern{}.png".format(i)
             cv.imwrite(self.directory + "/" + filename, 255*pattern[:,:,i]) 
-        blankImage = np.zeros((self.height,self.width), dtype=np.uint8)
-        fullImage = 255*np.ones((self.height,self.width),dtype=np.uint8)
+        blankImage = np.zeros((self.proj_h,self.proj_w), dtype=np.uint8)
+        fullImage = 255*np.ones((self.proj_h,self.proj_w),dtype=np.uint8)
         cv.imwrite(self.directory + "/blank_image.png", blankImage)
         cv.imwrite(self.directory + "/full_image.png", fullImage)
         
         return self.N
 
     def convert_gray_code_to_decimal(self,gray_code_patterns): 
-        num_bits, height, width = gray_code_patterns.shape
+        num_bits, cam_h, cam_w = gray_code_patterns.shape
         
-        binary_patterns = np.zeros((num_bits, height, width), dtype=np.uint8)
+        binary_patterns = np.zeros((num_bits, cam_h, cam_w), dtype=np.uint8)
         binary_patterns[0, :, :] = gray_code_patterns[0, :, :]
         for i in range(1, num_bits):
             binary_patterns[i, :, :] = np.bitwise_xor(binary_patterns[i-1, :, :], gray_code_patterns[i, :, :])
             
-        decimal_values = np.zeros((height, width), dtype=int)
+        decimal_values = np.zeros((cam_h, cam_w), dtype=int)
         for i in range(num_bits):
             decimal_values += (2 ** (num_bits - 1 - i)) * binary_patterns[i, :, :]
         
-        correct_offset = ((2**num_bits) - width)/2 #adjust for centering offset, changes based on width
+        correct_offset = ((2**num_bits) - self.proj_w)/2 #adjust for centering offset, changes based on width
         decimal_values -= int(correct_offset) # adjust decimal values according to above correction to get columns 0 through 1919 (should be 64 for 1920 by 1080, 224 for 1600 by 1200). 
 
         return decimal_values 
@@ -139,7 +144,7 @@ class SLscan:
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
         self.avg_thresh = cv.addWeighted(self.blankImage,0.5,self.fullImage,0.5,0)
-        image_array = np.empty((self.N,self.height,self.width),dtype=np.uint8)
+        image_array = np.empty((self.N,self.cam_h,self.cam_w),dtype=np.uint8)
     
         for i in range(self.N):
             filein = "image_{}.png".format(i)
@@ -235,7 +240,9 @@ class SLscan:
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
 # directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImagesPi"
-# scanner = SLscan(1920,1080,directory)
+# cam_resolution = (4608,2592)
+# proj_resolution = (1920,1080)
+# scanner = SLscan(cam_resolution,proj_resolution,directory)
 # scanner.generate_gray_code_patterns()
 # ## PROJECT AND TAKE PICTURES HERE ##
 
