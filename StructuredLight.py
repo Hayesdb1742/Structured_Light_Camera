@@ -18,10 +18,7 @@ class SLscan:
         self.proj_h = proj_h
         
         # Calculate number of bits required to represent the width
-        #self.N = math.ceil(math.log2(self.proj_w)) ##PROPER CALCULATION FOR PROJECTOR RESOLUTION
-        
-        #DEMO BITS:
-        self.N = 8
+        self.N = math.ceil(math.log2(self.proj_w)) ##PROPER CALCULATION FOR PROJECTOR RESOLUTION
         
         coeiff = np.load(directory + "/" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
         self.lst = coeiff.files
@@ -46,7 +43,7 @@ class SLscan:
         
         # Fill in the pattern
         for i in range(num_bits):
-            pattern[:, :, i] = np.tile(gray_codes[(np.arange(self.proj_w) + offset), i].reshape(1, -1), (self.height, 1))
+            pattern[:, :, i] = np.tile(gray_codes[(np.arange(self.proj_w) + offset), i].reshape(1, -1), (self.proj_h, 1))
             filename = "gray_pattern{}.png".format(i)
             cv.imwrite(self.directory + "/" + filename, 255*pattern[:,:,i]) 
         blankImage = np.zeros((self.proj_h,self.proj_w), dtype=np.uint8)
@@ -230,10 +227,10 @@ directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\Test
 cam_resolution = (1920,1080)
 proj_resolution = (1920,1080)
 scanner = SLscan(cam_resolution,proj_resolution,directory)
-# scanner.generate_gray_code_patterns()
+scanner.generate_gray_code_patterns()
 ## PROJECT AND TAKE PICTURES HERE ##
 
-captured_patterns = scanner.load_images()
-decoded = scanner.preprocess(captured_patterns,threshold=100)
-scanner.calculate_3D_points(decoded)
-scanner.save(view=0)
+# captured_patterns = scanner.load_images()
+# decoded = scanner.preprocess(captured_patterns,threshold=100)
+# scanner.calculate_3D_points(decoded)
+# scanner.save(view=0)
