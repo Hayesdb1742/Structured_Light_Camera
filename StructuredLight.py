@@ -223,7 +223,7 @@ class SLscan:
         
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
-directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImagesPi"
+directory = "patterns"
 cam_resolution = (1920,1080)
 proj_resolution = (1920,1080)
 scanner = SLscan(cam_resolution,proj_resolution,directory)
