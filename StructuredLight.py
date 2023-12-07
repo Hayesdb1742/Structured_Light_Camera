@@ -227,10 +227,13 @@ directory = "patterns"
 cam_resolution = (1920,1080)
 proj_resolution = (1920,1080)
 scanner = SLscan(cam_resolution,proj_resolution,directory)
-scanner.generate_gray_code_patterns()
+# scanner.generate_gray_code_patterns()
 ## PROJECT AND TAKE PICTURES HERE ##
 
-# captured_patterns = scanner.load_images()
+captured_patterns = scanner.load_images()
+cv.imshow("test", captured_patterns[3])
+cv.waitKey(0)
+cv.destroyAllWindows()
 # decoded = scanner.preprocess(captured_patterns,threshold=100)
 # scanner.calculate_3D_points(decoded)
 # scanner.save(view=0)
