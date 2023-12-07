@@ -88,13 +88,13 @@ def convert_and_visualize_pcd_to_stl(pcd_object, stl_file, avg_distance):
 
 # o3d.visualization.draw_geometries([stitched_pc])
 
-# # File paths
-# stl_file_path = 'output_mesh.stl'
-
-# # Calculate average distance and use it for mesh generation
-# avg_distance = calculate_average_distance(stitched_pc)
-# convert_and_visualize_pcd_to_stl(stitched_pc, stl_file_path, avg_distance)
+# File paths
+stl_file_path = 'output_mesh.stl'
 
 
 point_cloud = load_csv("grayCodePics/view_0.csv")
 o3d.visualization.draw_geometries([point_cloud])
+
+# Calculate average distance and use it for mesh generation
+avg_distance = calculate_average_distance(point_cloud)
+convert_and_visualize_pcd_to_stl(point_cloud, stl_file_path, avg_distance)
