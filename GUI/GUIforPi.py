@@ -1,6 +1,8 @@
 import tkinter as tk
 import paramiko
 import socket
+import subprocess
+import sys
 
 # Initialize global variables
 ssh_client = None
@@ -9,9 +11,8 @@ is_running = False
 scripts_to_run = ['file_name_1.py', 'file_name_2.py', 'file_name_3.py']
 current_script = 0
 numRotations = 0
-
-# GUI Functions
-import socket  # Import the socket library to handle socket exceptions
+view_scripts_to_run = ['StichingP2M.py']  # Add your scripts here
+current_view_script = 0
 
 
 def connect_to_pi():
@@ -123,6 +124,37 @@ def transfer_stl():
     sftp_client.close()
     execution_status_label.config(text=".STL file transferred successfully!")
 
+def execute_local_script(script_name):
+    try:
+        result = subprocess.run([sys.executable, script_name], capture_output=True, text=True)
+        return result.stdout, result.stderr
+    except Exception as e:
+        return None, str(e)
+
+
+def view_script():
+    global current_view_script, view_scripts_to_run
+    current_view_script = 0
+    start_view_next_script()
+
+
+def start_view_next_script():
+    global current_view_script, view_scripts_to_run
+    if current_view_script < len(view_scripts_to_run):
+        script_name = view_scripts_to_run[current_view_script]
+        output, error = execute_local_script(script_name)
+        if output or error:
+            execution_output_label.config(text=f"Output from {script_name}:\n{output}\nErrors:\n{error}")
+            current_view_script += 1
+        else:
+            execution_status_label.config(text="Failed to execute script.")
+        if current_view_script < len(view_scripts_to_run):
+            root.after(1000, start_view_next_script)  # Proceed to next script after 1 second
+        else:
+            current_view_script = 0
+            execution_status_label.config(text="All scripts executed.")
+
+
 # GUI Layout
 root = tk.Tk()
 root.title("Pi Script Controller")
@@ -154,6 +186,9 @@ start_button.grid(row=0, column=0, sticky="ew", padx=padx, pady=pady)
 
 terminate_button = tk.Button(execution_frame, text="Terminate", bg='darkgray', command=terminate_script, state=tk.DISABLED, width=button_width)
 terminate_button.grid(row=1, column=0, sticky="ew", padx=padx, pady=pady)
+
+view_button = tk.Button(execution_frame, text="View", bg='lightgray', command=view_script, state=tk.NORMAL, width=button_width)
+view_button.grid(row=4, column=0, sticky="ew", padx=padx, pady=pady)
 
 execution_status_label = tk.Label(execution_frame, text="No script is running", font=("Helvetica", 10))
 execution_status_label.grid(row=2, column=0, sticky="nsew")
