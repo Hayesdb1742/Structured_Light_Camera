@@ -80,12 +80,12 @@ class SLscan:
         image = cv.undistort(input,self.K,self.dist_coeff)
         return image
 
-    def pbpthreshold(self, image):
+    def pbpthreshold(self, image,avg_thresh):
         """
         :param image: Input image.
         :param threshold: Threshold image.
         """
-        threshold = self.avg_thresh
+        threshold = avg_thresh
         #Compares image to thresholding image, set binary, if < than threshold image pixel = 0, if >, pixel goes to 255.
         flatimage = image.flatten()
         flatthreshold = threshold.flatten()
@@ -140,7 +140,7 @@ class SLscan:
         fullImage = self.undistort(fullImage)
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
-        self.avg_thresh = cv.addWeighted(self.blankImage,0.5,self.fullImage,0.5,0)
+        avg_thresh = cv.addWeighted(self.blankImage,0.5,self.fullImage,0.5,0)
         image_array = np.empty((self.N,self.cam_h,self.cam_w),dtype=np.uint8)
     
         for i in range(self.N):
@@ -148,7 +148,7 @@ class SLscan:
             image = cv.imread(self.directory+"/"+filein)
             image = self.undistort(image) 
             image_gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-            image_thresh = self.pbpthreshold(image_gray)
+            image_thresh = self.pbpthreshold(image_gray,avg_thresh)
             image_array[i] = image_thresh
             captured_patterns = np.array(image_array)
         
@@ -223,14 +223,17 @@ class SLscan:
         
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
-directory = "patterns"
+directory = "grayCodePics"
 cam_resolution = (1920,1080)
 proj_resolution = (1920,1080)
 scanner = SLscan(cam_resolution,proj_resolution,directory)
-scanner.generate_gray_code_patterns()
+# scanner.generate_gray_code_patterns()
 ## PROJECT AND TAKE PICTURES HERE ##
 
-# captured_patterns = scanner.load_images()
+captured_patterns = scanner.load_images()
+cv.imshow("test", captured_patterns[3])
+cv.waitKey(0)
+cv.destroyAllWindows()
 # decoded = scanner.preprocess(captured_patterns,threshold=100)
 # scanner.calculate_3D_points(decoded)
 # scanner.save(view=0)
