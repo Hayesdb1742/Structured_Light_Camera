@@ -81,16 +81,20 @@ def convert_and_visualize_pcd_to_stl(pcd_object, stl_file, avg_distance):
     # Visualize the mesh
     o3d.visualization.draw_geometries([bpa_mesh])
 
-# Example usage
-directory = "/path/to/pointcloud/files"
-file_prefix = "pointcloud"
-stitched_pc = stitch_pcds(directory, file_prefix, rotation_axis='z', degrees_per_capture=10)
+# # Example usage
+# directory = "/path/to/pointcloud/files"
+# file_prefix = "pointcloud"
+# stitched_pc = stitch_pcds(directory, file_prefix, rotation_axis='z', degrees_per_capture=10)
 
-o3d.visualization.draw_geometries([stitched_pc])
+# o3d.visualization.draw_geometries([stitched_pc])
 
-# File paths
-stl_file_path = 'output_mesh.stl'
+# # File paths
+# stl_file_path = 'output_mesh.stl'
 
-# Calculate average distance and use it for mesh generation
-avg_distance = calculate_average_distance(stitched_pc)
-convert_and_visualize_pcd_to_stl(stitched_pc, stl_file_path, avg_distance)
+# # Calculate average distance and use it for mesh generation
+# avg_distance = calculate_average_distance(stitched_pc)
+# convert_and_visualize_pcd_to_stl(stitched_pc, stl_file_path, avg_distance)
+
+
+point_cloud = load_csv("grayCodePics/view_0.csv")
+o3d.visualization.draw_geometries([point_cloud])

@@ -231,9 +231,9 @@ scanner = SLscan(cam_resolution,proj_resolution,directory)
 ## PROJECT AND TAKE PICTURES HERE ##
 
 captured_patterns = scanner.load_images()
-cv.imshow("test", captured_patterns[3])
+cv.imshow("test", captured_patterns[8]*255)
 cv.waitKey(0)
 cv.destroyAllWindows()
-# decoded = scanner.preprocess(captured_patterns,threshold=100)
-# scanner.calculate_3D_points(decoded)
-# scanner.save(view=0)
+decoded = scanner.preprocess(captured_patterns,threshold=70)
+scanner.calculate_3D_points(decoded)
+scanner.save(view=0)
