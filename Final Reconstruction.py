@@ -69,7 +69,7 @@ def convert_and_visualize_pcd_to_stl(pcd_object, stl_file, avg_distance):
     pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
 
     # Determine radii based on average distance
-    radii = [avg_distance * factor for factor in [0.8, 1, 1.2, 1.4, 2]]
+    radii = [avg_distance * factor for factor in [0.8, 1, 1.2, 1.4, 2, 3]]
 
     # Apply Ball Pivoting algorithm
     bpa_mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
