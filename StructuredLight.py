@@ -18,7 +18,10 @@ class SLscan:
         self.proj_h = proj_h
         
         # Calculate number of bits required to represent the width
-        self.N = math.ceil(math.log2(self.proj_w))
+        #self.N = math.ceil(math.log2(self.proj_w)) ##PROPER CALCULATION FOR PROJECTOR RESOLUTION
+        
+        #DEMO BITS:
+        self.N = 8
         
         coeiff = np.load(directory + "/" + "calib.npz") ## Load Calibration Coeiff (Must be saved in directory)
         self.lst = coeiff.files
@@ -50,8 +53,6 @@ class SLscan:
         fullImage = 255*np.ones((self.proj_h,self.proj_w),dtype=np.uint8)
         cv.imwrite(self.directory + "/blank_image.png", blankImage)
         cv.imwrite(self.directory + "/full_image.png", fullImage)
-        
-        return self.N
 
     def convert_gray_code_to_decimal(self,gray_code_patterns): 
         num_bits, cam_h, cam_w = gray_code_patterns.shape
@@ -138,7 +139,7 @@ class SLscan:
         #Open cv does everything in dtype uint8, all processing done in uint8 to avoid switching back and forth wasting time/mem
         blankImage = cv.imread(self.directory+"/"+"blank_image.png") # all black projection image capture
         blankImage = self.undistort(blankImage)
-        fullImage = cv.imread(self.directory+"/"+"full_image.png") # all white projection image capture
+        fullImage = cv.imread(self.directory+"/"+"full_image.png") # all white projection image capture       
         fullImage = self.undistort(fullImage)
         self.blankImage = cv.cvtColor(blankImage, cv.COLOR_BGR2GRAY)
         self.fullImage =  cv.cvtColor(fullImage,cv.COLOR_BGR2GRAY)
@@ -226,16 +227,13 @@ class SLscan:
         
 # ## EXAMPLE USAGE FOR ONE VIEW:
 directory = "C:\\Users\\nludw\\Documents\\Capstone\\Binary Coding\\Testing\\TestImagesPi"
-cam_resolution = (2560,1440)
+cam_resolution = (1920,1080)
 proj_resolution = (1920,1080)
 scanner = SLscan(cam_resolution,proj_resolution,directory)
 # scanner.generate_gray_code_patterns()
 ## PROJECT AND TAKE PICTURES HERE ##
 
 captured_patterns = scanner.load_images()
-cv.imshow("test",captured_patterns[5]*255)
-cv.waitKey(0)
-cv.destroyAllWindows()
-# decoded = scanner.preprocess(captured_patterns,threshold=100)
-# scanner.calculate_3D_points(decoded)
-# scanner.save(view=0)
+decoded = scanner.preprocess(captured_patterns,threshold=100)
+scanner.calculate_3D_points(decoded)
+scanner.save(view=0)
